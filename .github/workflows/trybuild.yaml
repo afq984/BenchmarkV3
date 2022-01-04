@@ -1,0 +1,27 @@
+name: trybuild
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            config: linux-amd64
+          - os: ubuntu-1604
+            config: linux-amd64-ubuntu1604
+          - os: macOS-latest
+            config: macos-amd64
+
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-go@v2
+        with:
+          go-version: '^1'
+      - run: go run . -c ${{ matrix.config }}

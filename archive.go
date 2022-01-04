@@ -11,9 +11,29 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"strings"
 
 	"github.com/mholt/archiver/v3"
 )
+
+// a version of archiver.Unarchive that allows overwritting existing files
+func unarchive(source, destination string) error {
+	var u archiver.Unarchiver
+	switch {
+	case strings.HasSuffix(source, ".zip"):
+		u = archiver.NewZip()
+		u.(*archiver.Zip).OverwriteExisting = true
+	case strings.HasSuffix(source, ".tar.gz"):
+		u = archiver.NewTarGz()
+		u.(*archiver.TarGz).OverwriteExisting = true
+	case strings.HasSuffix(source, ".tar.xz"):
+		u = archiver.NewTarXz()
+		u.(*archiver.TarXz).OverwriteExisting = true
+	default:
+		return fmt.Errorf("unknown file extension: %s", source)
+	}
+	return u.Unarchive(source, destination)
+}
 
 type mismatchedSha256 struct {
 	want string
@@ -132,7 +152,7 @@ func (a *Archive) DownloadAndExtract() error {
 	if a.ExtractTo != "" {
 		extractTo = filepath.Join(extractTo, a.ExtractTo)
 	}
-	err = archiver.Unarchive(a.savePath(), extractTo)
+	err = unarchive(a.savePath(), extractTo)
 	if err != nil {
 		log.Println("extract failed:", err)
 		return err
