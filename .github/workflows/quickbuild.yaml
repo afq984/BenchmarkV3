@@ -1,4 +1,4 @@
-name: trybuild
+name: quickbuild
 
 on:
   push:
@@ -14,8 +14,6 @@ jobs:
         include:
           - os: ubuntu-latest
             config: linux-amd64
-          - os: ubuntu-1604
-            config: linux-amd64-ubuntu1604
           - os: macOS-latest
             config: macos-amd64
 
@@ -24,4 +22,4 @@ jobs:
       - uses: actions/setup-go@v2
         with:
           go-version: '^1'
-      - run: go run . -c ${{ matrix.config }}
+      - run: go run . -c ${{ matrix.config }} -quick

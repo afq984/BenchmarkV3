@@ -2,6 +2,7 @@ package main
 
 import (
 	_ "embed"
+	"flag"
 	"log"
 	"os"
 	"os/exec"
@@ -14,6 +15,12 @@ import (
 var toolchainContents []byte
 
 const toolchainFileName = "toolchain.cmake"
+
+var quick bool
+
+func init() {
+	flag.BoolVar(&quick, "quick", false, "do a quick build to check configuration")
+}
 
 func run(name string, args ...string) error {
 	cmd := exec.Command(
@@ -110,10 +117,14 @@ func Build(c *Config) (err error) {
 	}
 
 	t0 := time.Now()
+	buildTarget := "llc"
+	if quick {
+		buildTarget = "llvm-cxxfilt"
+	}
 	err = run(
 		buildAbsPath(c.Ninja()),
 		"-C", buildAbsPath("out"),
-		"llc",
+		buildTarget,
 	)
 	t1 := time.Now()
 	if err != nil {
