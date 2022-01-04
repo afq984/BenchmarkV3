@@ -47,12 +47,14 @@ func buildAbsPath(rel string) string {
 	return p
 }
 
-func Build(c *Config) (err error) {
+func Build(c *Config) (time.Duration, error) {
+	var err error
+
 	log.Println("cleaning build directory")
 	err = os.RemoveAll(buildDir)
 	if err != nil {
 		log.Println("faild to cleanup build directory")
-		return err
+		return 0, err
 	}
 
 	// parallel download and extract
@@ -77,7 +79,7 @@ func Build(c *Config) (err error) {
 
 		wg.Wait()
 		if err != nil {
-			return err
+			return 0, err
 		}
 	}
 
@@ -85,14 +87,14 @@ func Build(c *Config) (err error) {
 	err = os.WriteFile(filepath.Join(buildDir, toolchainFileName), toolchainContents, 0644)
 	if err != nil {
 		log.Println("failed to write toolchain.cmake:", err)
-		return err
+		return 0, err
 	}
 
 	// symlink so we can have a static cmake toolchain file
 	err = os.Symlink(c.ClangBin, filepath.Join(buildDir, "clang-bin"))
 	if err != nil {
 		log.Println("cannot create symlink for clang-bin")
-		return err
+		return 0, err
 	}
 
 	err = run(
@@ -108,7 +110,7 @@ func Build(c *Config) (err error) {
 		"-DLLVM_TARGETS_TO_BUILD=X86",
 	)
 	if err != nil {
-		return err
+		return 0, err
 	}
 
 	t0 := time.Now()
@@ -123,11 +125,11 @@ func Build(c *Config) (err error) {
 	)
 	t1 := time.Now()
 	if err != nil {
-		return err
+		return 0, err
 	}
 
 	dt := t1.Sub(t0)
 	log.Println("build completed in", dt)
 
-	return nil
+	return dt, nil
 }
