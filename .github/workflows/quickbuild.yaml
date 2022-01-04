@@ -1,4 +1,4 @@
-name: quickbuild
+name: test
 
 on:
   push:
@@ -6,7 +6,7 @@ on:
   pull_request:
 
 jobs:
-  build:
+  quickbuild:
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -23,3 +23,19 @@ jobs:
         with:
           go-version: '^1'
       - run: go run . -c ${{ matrix.config }} -quick
+
+  gotest:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - ubuntu-latest
+          - macOS-latest
+
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-go@v2
+        with:
+          go-version: '^1'
+      - run: go test -v ./...
