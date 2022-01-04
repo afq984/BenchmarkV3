@@ -88,15 +88,10 @@ func Build(c *Config) (err error) {
 		return err
 	}
 
-	// symlink executables so we can have a static cmake toolchain file
-	err = os.Symlink(c.Clang(), filepath.Join(buildDir, "clang"))
+	// symlink so we can have a static cmake toolchain file
+	err = os.Symlink(c.ClangBin, filepath.Join(buildDir, "clang-bin"))
 	if err != nil {
-		log.Println("cannot create symlink for clang")
-		return err
-	}
-	err = os.Symlink(c.Clangpp(), filepath.Join(buildDir, "clang++"))
-	if err != nil {
-		log.Println("cannot create symlink for clang++")
+		log.Println("cannot create symlink for clang-bin")
 		return err
 	}
 

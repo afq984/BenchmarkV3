@@ -29,16 +29,6 @@ func (c *Config) Archives() []*Archive {
 	}
 }
 
-// clang path relative to buildDir
-func (c *Config) Clang() string {
-	return filepath.Join(c.ClangBin, "clang")
-}
-
-// clang++ path relative to buildDir
-func (c *Config) Clangpp() string {
-	return filepath.Join(c.ClangBin, "clang++")
-}
-
 // llvm-tblgen path relative to buildDir
 func (c *Config) LLVMTblgen() string {
 	return filepath.Join(c.ClangBin, "llvm-tblgen")
