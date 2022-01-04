@@ -109,7 +109,32 @@ var LinuxAmd64Ubuntu1604Config = &Config{
 	NinjaArchive: LinuxAmd64Config.NinjaArchive,
 
 	LLVMSrc:        defaultLLVMSrc,
-	LLVMSrcArchive: LinuxAmd64Config.LLVMSrcArchive,
+	LLVMSrcArchive: defaultLLVMSrcArchive,
+
+	DebianSysrootArchive: defaultDebianSysrootArchive,
+}
+
+var MacOSAmd64Config = &Config{
+	ClangBin: "clang+llvm-13.0.0-x86_64-apple-darwin/bin",
+	ClangArchive: &Archive{
+		URL:    "https://github.com/llvm/llvm-project/releases/download/llvmorg-13.0.0/clang+llvm-13.0.0-x86_64-apple-darwin.tar.xz",
+		Sha256: "d051234eca1db1f5e4bc08c64937c879c7098900f7a0370f3ceb7544816a8b09",
+	},
+
+	CmakeBin: "cmake-3.22.1-macos-universal/CMake.app/Contents/bin",
+	CmakeArchive: &Archive{
+		URL:    "https://github.com/Kitware/CMake/releases/download/v3.22.1/cmake-3.22.1-macos-universal.tar.gz",
+		Sha256: "9ba46ce69d524f5bcdf98076a6b01f727604fb31cf9005ec03dea1cf16da9514",
+	},
+
+	NinjaBin: defaultNinjaBin,
+	NinjaArchive: &Archive{
+		URL:    "https://github.com/ninja-build/ninja/releases/download/v1.10.2/ninja-mac.zip",
+		Sha256: "6fa359f491fac7e5185273c6421a000eea6a2f0febf0ac03ac900bd4d80ed2a5",
+	},
+
+	LLVMSrc:        defaultLLVMSrc,
+	LLVMSrcArchive: defaultLLVMSrcArchive,
 
 	DebianSysrootArchive: defaultDebianSysrootArchive,
 }
@@ -117,4 +142,5 @@ var LinuxAmd64Ubuntu1604Config = &Config{
 var configs = map[string]*Config{
 	"linux-amd64":            LinuxAmd64Config,
 	"linux-amd64-ubuntu1604": LinuxAmd64Ubuntu1604Config,
+	"macos-amd64":            MacOSAmd64Config,
 }
