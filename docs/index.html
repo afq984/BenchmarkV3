@@ -13,13 +13,13 @@
         function getFormUrl(search) {
             const oq = new URLSearchParams(search);
             const q = new URLSearchParams({
-                [qTime]: oq.get('T'),
-                [qTrack]: oq.get('K'),
-                [qConfig]: oq.get('G'),
-                [qHostname]: oq.get('H'),
-                [qCpu]: oq.get('C'),
-                [qMemory]: oq.get('R'),
-                [qMisc]: oq.get('M'),
+                [qTime]: oq.get('T') || "",
+                [qTrack]: oq.get('K') || "",
+                [qConfig]: oq.get('G') || "",
+                [qHostname]: oq.get('H') || "",
+                [qCpu]: oq.get('C') || "",
+                [qMemory]: oq.get('R') || "",
+                [qMisc]: oq.get('M') || "",
             });
             const url = new URL(baseUrl);
             url.search = q.toString();
