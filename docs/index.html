@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+
+<body>
+    <script>
+        const baseUrl = "https://docs.google.com/forms/d/e/1FAIpQLSdaaUfaAHrlAVNZdLMqxvaUVT-PTu0oWw0n3Qn5ShGb6KzMXA/viewform";
+        const qTime = "entry.405901930";
+        const qTrack = "entry.729435593";
+        const qConfig = "entry.1527628670";
+        const qHostname = "entry.1254205368";
+        const qCpu = "entry.1554530656";
+        const qMemory = "entry.1830768320";
+        const qMisc = "entry.2009930519";
+        function getFormUrl(search) {
+            const oq = new URLSearchParams(search);
+            const q = new URLSearchParams({
+                [qTime]: oq.get('T'),
+                [qTrack]: oq.get('K'),
+                [qConfig]: oq.get('G'),
+                [qHostname]: oq.get('H'),
+                [qCpu]: oq.get('C'),
+                [qMemory]: oq.get('R'),
+                [qMisc]: oq.get('M'),
+            });
+            const url = new URL(baseUrl);
+            url.search = q.toString();
+            return url;
+        }
+        window.addEventListener('load', () => {
+            const formUrl = getFormUrl(window.location.search);
+            window.location.replace(formUrl);
+        });
+    </script>
+</body>

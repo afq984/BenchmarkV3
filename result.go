@@ -1,21 +1,21 @@
 package main
 
 import (
-	"fmt"
+	"net/url"
 	"os"
-	"time"
+	"strconv"
 
 	"github.com/afq984/BenchmarkV3/systemdetect"
 )
 
 type Result struct {
-	Time     time.Duration
-	Track    string
-	Config   string
-	Hostname string
-	CPU      string
-	Memory   int64
-	Misc     string
+	Time     float64 `json:"time"`
+	Track    string  `json:"track"`
+	Config   string  `json:"config"`
+	Hostname string  `json:"hostname"`
+	CPU      string  `json:"cpu"`
+	Memory   int64   `json:"memory"`
+	Misc     string  `json:"misc"`
 }
 
 const unknown = "<unknown>"
@@ -43,9 +43,21 @@ func populateSystem(r *Result) {
 	}
 }
 
-func (r *Result) PrettyPrint() {
-	fmt.Printf("%f\t%s\t%s\t%s\t%s\t%d\t%s\n",
-		float64(r.Time)/float64(time.Second),
-		r.Track, r.Config, r.Hostname, r.CPU, r.Memory, r.Misc,
-	)
+func submissionURL(r *Result) string {
+	u, err := url.Parse("HTTPS://AFQ984.GITHUB.IO/BENCHMARKV3/")
+	if err != nil {
+		panic(err)
+	}
+
+	q := u.Query()
+	q.Add("T", strconv.FormatFloat(r.Time, 'g', -1, 64))
+	q.Add("K", r.Track)
+	q.Add("G", r.Config)
+	q.Add("H", r.Hostname)
+	q.Add("C", r.CPU)
+	q.Add("R", strconv.FormatInt(r.Memory, 10))
+	q.Add("M", r.Misc)
+	u.RawQuery = q.Encode()
+
+	return u.String()
 }

@@ -129,7 +129,6 @@ func Build(c *Config) (time.Duration, error) {
 	}
 
 	dt := t1.Sub(t0)
-	log.Println("build completed in", dt)
 
 	return dt, nil
 }

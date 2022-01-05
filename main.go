@@ -2,6 +2,7 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"log"
 	"os"
 	"time"
@@ -25,7 +26,7 @@ func main() {
 	)
 
 	if detect {
-		dt = 0
+		dt = 99 * time.Second
 		config = "detect"
 		track = "detect"
 	} else {
@@ -48,12 +49,18 @@ func main() {
 		}
 	}
 
+	fmt.Println()
+	fmt.Println("build completed in", dt)
+	fmt.Println("builds per hour:", float64(time.Hour)/float64(dt))
+	fmt.Println()
+
 	r := &Result{
 		Track:  track,
 		Config: config,
-		Time:   dt,
+		Time:   float64(dt) / float64(time.Second),
 	}
 	populateSystem(r)
 
-	r.PrettyPrint()
+	fmt.Println("Visit the following link to submit the results:")
+	fmt.Println(submissionURL(r))
 }
