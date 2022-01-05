@@ -44,6 +44,7 @@ func populateSystem(r *Result) {
 }
 
 func submissionURL(r *Result) string {
+	// Prefer uppercase in URLs to save QR code space
 	u, err := url.Parse("HTTPS://AFQ984.GITHUB.IO/BENCHMARKV3/")
 	if err != nil {
 		panic(err)
