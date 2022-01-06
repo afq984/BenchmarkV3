@@ -141,7 +141,7 @@ func (a *Archive) downloadWithChecks() error {
 	return nil
 }
 
-func (a *Archive) DownloadAndExtract() error {
+func (a *Archive) DownloadAndExtract(buildDir string) error {
 	err := a.downloadWithChecks()
 	if err != nil {
 		return err

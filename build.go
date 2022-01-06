@@ -3,6 +3,7 @@ package main
 import (
 	_ "embed"
 	"flag"
+	"io/ioutil"
 	"log"
 	"os"
 	"os/exec"
@@ -39,22 +40,27 @@ func run(name string, args ...string) error {
 	return err
 }
 
-func buildAbsPath(rel string) string {
-	p, err := filepath.Abs(filepath.Join(buildDir, rel))
-	if err != nil {
-		panic(err)
-	}
-	return p
-}
-
 func Build(c *Config) (time.Duration, error) {
+	var buildDir string
 	var err error
 
-	log.Println("cleaning build directory")
-	err = os.RemoveAll(buildDir)
+	buildDir, err = ioutil.TempDir(".", "build.*")
 	if err != nil {
-		log.Println("faild to cleanup build directory")
+		log.Println("failed to create build directory")
 		return 0, err
+	}
+	defer func() {
+		log.Println("cleaning up", buildDir)
+		os.RemoveAll(buildDir)
+	}()
+	log.Println("using build directory:", buildDir)
+
+	buildAbsPath := func(rel string) string {
+		p, err := filepath.Abs(filepath.Join(buildDir, rel))
+		if err != nil {
+			panic(err)
+		}
+		return p
 	}
 
 	// parallel download and extract
@@ -67,7 +73,7 @@ func Build(c *Config) (time.Duration, error) {
 			go func(a *Archive) {
 				defer wg.Done()
 
-				lerr := a.DownloadAndExtract()
+				lerr := a.DownloadAndExtract(buildDir)
 				if lerr != nil {
 					errMux.Lock()
 					defer errMux.Unlock()
