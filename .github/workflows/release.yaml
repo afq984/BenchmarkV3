@@ -1,0 +1,22 @@
+name: release
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-go@v2
+        with:
+          go-version: '^1'
+      - run: sudo apt-get install -y ninja-build
+      - run: ninja
+      - uses: softprops/action-gh-release@8a65c813553f4d05769635eb1b70180d25b9b61b
+        with:
+          files: out/*
+          tag_name: latest

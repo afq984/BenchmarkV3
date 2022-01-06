@@ -1,0 +1,18 @@
+rule go
+  command = CGO_ENABLED=0 GOOS=${os} GOARCH=${arch} go build -o $out .
+
+build out/BenchmarkV3-linux-amd64: go
+  os = linux
+  arch = amd64
+
+build out/BenchmarkV3-linux-arm64: go
+  os = linux
+  arch = arm64
+
+build out/BenchmarkV3-macos-amd64: go
+  os = darwin
+  arch = amd64
+
+build out/BenchmarkV3-macos-arm64: go
+  os = darwin
+  arch = arm64

@@ -1,3 +1,5 @@
 /BenchmarkV3
 /dl/
 /build/
+/out/
+.ninja_log
