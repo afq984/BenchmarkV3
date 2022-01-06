@@ -16,13 +16,18 @@ jobs:
         with:
           go-version: '^1'
       - run: sudo apt-get install -y ninja-build
+
       - run: ninja
+
       - uses: actions/upload-artifact@v2
         with:
           name: out
           path: out
+
+      - run: echo "Build ${{ github.sha }} on $(date --iso-8601=seconds)" > body
       - uses: softprops/action-gh-release@8a65c813553f4d05769635eb1b70180d25b9b61b
         if: ${{ github.ref == 'refs/heads/main' }}
         with:
+          body_path: body
           files: out/*
           tag_name: latest
