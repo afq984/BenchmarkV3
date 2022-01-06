@@ -2,10 +2,7 @@ package main
 
 import "path/filepath"
 
-const (
-	downloadDir = "dl"
-	buildDir    = "build"
-)
+const downloadDir = "dl"
 
 type Config struct {
 	ClangBin             string
