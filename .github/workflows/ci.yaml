@@ -11,18 +11,16 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        include:
-          - os: ubuntu-latest
-            config: linux-amd64
-          - os: macOS-latest
-            config: macos-amd64
+        os:
+          - ubuntu-latest
+          - macOS-latest
 
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-go@v2
         with:
           go-version: '^1'
-      - run: go run . -c ${{ matrix.config }} -quick
+      - run: go run . -quick
 
   gotest:
     runs-on: ${{ matrix.os }}

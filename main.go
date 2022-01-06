@@ -15,7 +15,7 @@ func main() {
 		config string
 		detect bool
 	)
-	flag.StringVar(&config, "c", "", "config to use")
+	flag.StringVar(&config, "c", "auto", "config to use")
 	flag.BoolVar(&detect, "detect", false, "detect the system only; don't run any benchmarks")
 	flag.Parse()
 
@@ -34,6 +34,11 @@ func main() {
 			track = "quick"
 		} else {
 			track = "standard"
+		}
+
+		if config == "auto" {
+			config = autoselectConfig()
+			log.Printf("auto selected config %q, if this is not what you want, change it with the -c flag", config)
 		}
 
 		cfg, ok := configs[config]
