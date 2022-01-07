@@ -41,5 +41,11 @@ go build .
     *   `linux-amd64-ubuntu1604` - Try this one on older linux systems
     *   `macos-amd64` - Use this on macOS. Should also work on M1 through [Rosetta].
 
+## FAQ
+
+*   Why no `macos-arm64` config?
+
+    [LLVM 13.0.0](https://github.com/llvm/llvm-project/releases/tag/llvmorg-13.0.0) does not have a arm64 clang+llvm binary for macOS.
+
 [llc]: https://llvm.org/docs/CommandGuide/llc.html
 [Rosetta]: https://developer.apple.com/documentation/apple-silicon/about-the-rosetta-translation-environment
