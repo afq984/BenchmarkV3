@@ -106,6 +106,10 @@ func (a *Archive) downloadWithoutChecks(ctx context.Context) error {
 	}
 	defer resp.Body.Close()
 
+	if resp.StatusCode != http.StatusOK {
+		return fmt.Errorf("bad response status %d, %q", resp.StatusCode, a.URL)
+	}
+
 	f, err := os.Create(a.savePath())
 	if err != nil {
 		return err
