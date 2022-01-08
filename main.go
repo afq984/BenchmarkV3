@@ -12,11 +12,13 @@ func main() {
 	log.SetFlags(log.Lshortfile)
 
 	var (
-		config string
-		detect bool
+		config    string
+		detect    bool
+		outputURL string
 	)
 	flag.StringVar(&config, "c", "auto", "config to use")
 	flag.BoolVar(&detect, "detect", false, "detect the system only; don't run any benchmarks")
+	flag.StringVar(&outputURL, "output-url", "", "write submission URL to file")
 	flag.Parse()
 
 	var (
@@ -68,4 +70,12 @@ func main() {
 
 	fmt.Println("Visit the following link to submit the results:")
 	fmt.Println(submissionURL(r))
+
+	if outputURL != "" {
+		err := os.WriteFile(outputURL, []byte(submissionURL(r)), 0644)
+		if err != nil {
+			log.Println("failed to write output url:", err)
+			os.Exit(1)
+		}
+	}
 }
