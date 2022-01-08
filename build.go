@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	_ "embed"
-	"flag"
 	"io/ioutil"
 	"log"
 	"os"
@@ -12,6 +11,8 @@ import (
 	"path/filepath"
 	"sync"
 	"time"
+
+	"github.com/spf13/pflag"
 )
 
 //go:embed toolchain.cmake
@@ -22,7 +23,7 @@ const toolchainFileName = "toolchain.cmake"
 var quick bool
 
 func init() {
-	flag.BoolVar(&quick, "quick", false, "do a quick build to check configuration")
+	pflag.BoolVar(&quick, "quick", false, "do a quick build to check configuration")
 }
 
 func run(name string, args ...string) error {

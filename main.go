@@ -1,11 +1,12 @@
 package main
 
 import (
-	"flag"
 	"fmt"
 	"log"
 	"os"
 	"time"
+
+	"github.com/spf13/pflag"
 )
 
 func main() {
@@ -16,10 +17,10 @@ func main() {
 		detect    bool
 		outputURL string
 	)
-	flag.StringVar(&config, "c", "auto", "config to use")
-	flag.BoolVar(&detect, "detect", false, "detect the system only; don't run any benchmarks")
-	flag.StringVar(&outputURL, "output-url", "", "write submission URL to file")
-	flag.Parse()
+	pflag.StringVarP(&config, "config", "c", "auto", "config to use")
+	pflag.BoolVar(&detect, "detect", false, "detect the system only; don't run any benchmarks")
+	pflag.StringVar(&outputURL, "output-url", "", "write submission URL to file")
+	pflag.Parse()
 
 	var (
 		track string

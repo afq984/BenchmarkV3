@@ -2,7 +2,10 @@ module github.com/afq984/BenchmarkV3
 
 go 1.17
 
-require github.com/mholt/archiver/v4 v4.0.0-alpha.1
+require (
+	github.com/mholt/archiver/v4 v4.0.0-alpha.1
+	github.com/spf13/pflag v1.0.5
+)
 
 require (
 	github.com/andybalholm/brotli v1.0.4 // indirect
