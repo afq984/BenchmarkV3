@@ -50,11 +50,35 @@ var LinuxAmd64Ubuntu1604Config = &Config{
 		Sha256: "76d0bf002ede7a893f69d9ad2c4e101d15a8f4186fbfe24e74856c8449acd7c1",
 	},
 
-	CmakeBin:     LinuxAmd64Config.CmakeBin,
+	CmakeBin: LinuxAmd64Config.CmakeBin,
 	CmakePkg: LinuxAmd64Config.CmakePkg,
 
-	NinjaBin:     defaultNinjaBin,
+	NinjaBin: defaultNinjaBin,
 	NinjaPkg: LinuxAmd64Config.NinjaPkg,
+
+	LLVMSrc:        defaultLLVMSrc,
+	LLVMSrcArchive: defaultLLVMSrcArchive,
+
+	DebianSysrootArchive: defaultDebianSysrootArchive,
+}
+
+var LinuxArm64Config = &Config{
+	ClangBin: "clang+llvm-13.0.0-aarch64-linux-gnu/bin",
+	ClangPkg: &Archive{
+		URL:    "https://github.com/llvm/llvm-project/releases/download/llvmorg-13.0.0/clang+llvm-13.0.0-aarch64-linux-gnu.tar.xz",
+		Sha256: "968d65d2593850ee9b37fcda074fb7641529bd45d2f976af6c8197de3c22612f",
+	},
+
+	CmakeBin: "cmake-3.22.1-linux-aarch64/bin",
+	CmakePkg: &Archive{
+		URL:    "https://github.com/Kitware/CMake/releases/download/v3.22.1/cmake-3.22.1-linux-aarch64.tar.gz",
+		Sha256: "601443375aa1a48a1a076bda7e3cca73af88400463e166fffc3e1da3ce03540b",
+	},
+
+	NinjaBin: defaultNinjaBin,
+	NinjaPkg: &System{
+		Name: "ninja",
+	},
 
 	LLVMSrc:        defaultLLVMSrc,
 	LLVMSrcArchive: defaultLLVMSrcArchive,
@@ -90,5 +114,6 @@ var MacOSAmd64Config = &Config{
 var configs = map[string]*Config{
 	"linux-amd64":            LinuxAmd64Config,
 	"linux-amd64-ubuntu1604": LinuxAmd64Ubuntu1604Config,
+	"linux-arm64":            LinuxArm64Config,
 	"macos-amd64":            MacOSAmd64Config,
 }
