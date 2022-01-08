@@ -6,6 +6,7 @@ import (
 	"encoding/hex"
 	"fmt"
 	"io"
+	"io/fs"
 	"log"
 	"net/http"
 	"net/url"
@@ -14,26 +15,102 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/mholt/archiver/v3"
+	"github.com/mholt/archiver/v4"
 )
 
-// a version of archiver.Unarchive that allows overwritting existing files
-func unarchive(source, destination string) error {
-	var u archiver.Unarchiver
+func writeFile(ctx context.Context, path string, f archiver.File) error {
+	r, err := f.Open()
+	if err != nil {
+		return err
+	}
+	defer r.Close()
+
+	w, err := os.Create(path)
+	if err != nil {
+		return err
+	}
+	defer w.Close()
+
+	err = w.Chmod(f.Mode())
+	if err != nil {
+		return err
+	}
+
+	_, err = io.Copy(w, readerContext(ctx, r))
+	return err
+}
+
+func writeSymlink(ctx context.Context, path string, f archiver.File) error {
+	if f.LinkTarget == "" {
+		panic("empty LinkTarget")
+	}
+
+	_, err := os.Lstat(path)
+	if err == nil {
+		err = os.Remove(path)
+		if err != nil {
+			return err
+		}
+	}
+
+	return os.Symlink(f.LinkTarget, path)
+}
+
+func makeFileHandler(destination string) archiver.FileHandler {
+	return func(ctx context.Context, f archiver.File) error {
+		path := filepath.Join(destination, f.NameInArchive)
+
+		err := os.MkdirAll(filepath.Dir(path), 0755)
+		if err != nil {
+			return err
+		}
+
+		switch {
+		case f.FileInfo.IsDir():
+			return os.Mkdir(path, f.Mode())
+		case f.FileInfo.Mode().IsRegular():
+			return writeFile(ctx, path, f)
+		case f.FileInfo.Mode()&fs.ModeSymlink != 0:
+			return writeSymlink(ctx, path, f)
+		default:
+			return fmt.Errorf("cannot handle file mode: %v", f.FileInfo.Mode())
+		}
+	}
+}
+
+func unarchive(ctx context.Context, source, destination string) error {
+	var u archiver.Extractor
+	var d archiver.Decompressor
 	switch {
 	case strings.HasSuffix(source, ".zip"):
-		u = archiver.NewZip()
-		u.(*archiver.Zip).OverwriteExisting = true
+		u = archiver.Zip{}
 	case strings.HasSuffix(source, ".tar.gz"):
-		u = archiver.NewTarGz()
-		u.(*archiver.TarGz).OverwriteExisting = true
+		u = archiver.Tar{}
+		d = archiver.Gz{}
 	case strings.HasSuffix(source, ".tar.xz"):
-		u = archiver.NewTarXz()
-		u.(*archiver.TarXz).OverwriteExisting = true
+		u = archiver.Tar{}
+		d = archiver.Xz{}
 	default:
 		return fmt.Errorf("unknown file extension: %s", source)
 	}
-	return u.Unarchive(source, destination)
+
+	var r io.ReadCloser
+	f, err := os.Open(source)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+
+	if d == nil {
+		r = f
+	} else {
+		r, err = d.OpenReader(f)
+		if err != nil {
+			return err
+		}
+	}
+
+	return u.Extract(ctx, r, nil, makeFileHandler(destination))
 }
 
 type mismatchedSha256 struct {
@@ -163,7 +240,7 @@ func (a *Archive) DownloadAndExtract(ctx context.Context, buildDir string) error
 	if a.ExtractTo != "" {
 		extractTo = filepath.Join(extractTo, a.ExtractTo)
 	}
-	err = unarchive(a.savePath(), extractTo)
+	err = unarchive(ctx, a.savePath(), extractTo)
 	if err != nil {
 		log.Println("extract failed:", err)
 		return err
