@@ -1,5 +1,7 @@
 package main
 
+import "context"
+
 type Package interface {
-	SetUp(buildDir string) error
+	SetUp(ctx context.Context, buildDir string) error
 }
