@@ -52,6 +52,8 @@ type Archive struct {
 	ExtractTo string
 }
 
+var _ Package = &Archive{}
+
 // returns the download name of the archive
 func (a *Archive) savePath() string {
 	u, err := url.Parse(a.URL)
@@ -159,4 +161,8 @@ func (a *Archive) DownloadAndExtract(buildDir string) error {
 	}
 
 	return nil
+}
+
+func (a *Archive) SetUp(buildDir string) error {
+	return a.DownloadAndExtract(buildDir)
 }

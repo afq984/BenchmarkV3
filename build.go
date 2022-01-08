@@ -67,20 +67,20 @@ func Build(c *Config) (time.Duration, error) {
 	{
 		errMux := sync.Mutex{}
 		wg := sync.WaitGroup{}
-		wg.Add(len(c.Archives()))
+		wg.Add(len(c.Packages()))
 
-		for _, a := range c.Archives() {
-			go func(a *Archive) {
+		for _, p := range c.Packages() {
+			go func(p Package) {
 				defer wg.Done()
 
-				lerr := a.DownloadAndExtract(buildDir)
+				lerr := p.SetUp(buildDir)
 				if lerr != nil {
 					errMux.Lock()
 					defer errMux.Unlock()
 
 					err = lerr
 				}
-			}(a)
+			}(p)
 		}
 
 		wg.Wait()
