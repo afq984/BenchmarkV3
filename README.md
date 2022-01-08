@@ -30,10 +30,10 @@ go build .
 
 ## BenchmarkV3 command line flags
 
-*   `-quick`: Do a quick build instead. This measures the build time of `llvm-cxxfilt`
+*   `--quick`: Do a quick build instead. This measures the build time of `llvm-cxxfilt`
     instead of `llc` which has only about 1/8 build targets.
 
-*   `-detect`: Detect the system only. Does not actually run the benchmark.
+*   `--detect`: Detect the system only. Does not actually run the benchmark.
 
 *   `-c <config>`: Use a specific config:
     *   `auto` - Auto detect the config to use (default)
