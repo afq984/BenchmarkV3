@@ -4,21 +4,21 @@ import "path/filepath"
 
 type Config struct {
 	ClangBin             string
-	ClangArchive         *Archive
+	ClangPkg             Package
 	CmakeBin             string
-	CmakeArchive         *Archive
+	CmakePkg             Package
 	NinjaBin             string
-	NinjaArchive         *Archive
+	NinjaPkg             Package
 	LLVMSrc              string
 	LLVMSrcArchive       *Archive
 	DebianSysrootArchive *Archive
 }
 
-func (c *Config) Archives() []*Archive {
-	return []*Archive{
-		c.ClangArchive,
-		c.CmakeArchive,
-		c.NinjaArchive,
+func (c *Config) Packages() []Package {
+	return []Package{
+		c.ClangPkg,
+		c.CmakePkg,
+		c.NinjaPkg,
 		c.LLVMSrcArchive,
 		c.DebianSysrootArchive,
 	}

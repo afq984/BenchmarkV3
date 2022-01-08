@@ -20,19 +20,19 @@ var defaultDebianSysrootArchive = &Archive{
 
 var LinuxAmd64Config = &Config{
 	ClangBin: "clang+llvm-13.0.0-x86_64-linux-gnu-ubuntu-20.04/bin",
-	ClangArchive: &Archive{
+	ClangPkg: &Archive{
 		URL:    "https://github.com/llvm/llvm-project/releases/download/llvmorg-13.0.0/clang+llvm-13.0.0-x86_64-linux-gnu-ubuntu-20.04.tar.xz",
 		Sha256: "2c2fb857af97f41a5032e9ecadf7f78d3eff389a5cd3c9ec620d24f134ceb3c8",
 	},
 
 	CmakeBin: "cmake-3.22.1-linux-x86_64/bin",
-	CmakeArchive: &Archive{
+	CmakePkg: &Archive{
 		URL:    "https://github.com/Kitware/CMake/releases/download/v3.22.1/cmake-3.22.1-linux-x86_64.tar.gz",
 		Sha256: "73565c72355c6652e9db149249af36bcab44d9d478c5546fd926e69ad6b43640",
 	},
 
 	NinjaBin: defaultNinjaBin,
-	NinjaArchive: &Archive{
+	NinjaPkg: &Archive{
 		URL:    "https://github.com/ninja-build/ninja/releases/download/v1.10.2/ninja-linux.zip",
 		Sha256: "763464859c7ef2ea3a0a10f4df40d2025d3bb9438fcb1228404640410c0ec22d",
 	},
@@ -45,16 +45,16 @@ var LinuxAmd64Config = &Config{
 
 var LinuxAmd64Ubuntu1604Config = &Config{
 	ClangBin: "clang+llvm-13.0.0-x86_64-linux-gnu-ubuntu-16.04/bin",
-	ClangArchive: &Archive{
+	ClangPkg: &Archive{
 		URL:    "https://github.com/llvm/llvm-project/releases/download/llvmorg-13.0.0/clang+llvm-13.0.0-x86_64-linux-gnu-ubuntu-16.04.tar.xz",
 		Sha256: "76d0bf002ede7a893f69d9ad2c4e101d15a8f4186fbfe24e74856c8449acd7c1",
 	},
 
 	CmakeBin:     LinuxAmd64Config.CmakeBin,
-	CmakeArchive: LinuxAmd64Config.CmakeArchive,
+	CmakePkg: LinuxAmd64Config.CmakePkg,
 
 	NinjaBin:     defaultNinjaBin,
-	NinjaArchive: LinuxAmd64Config.NinjaArchive,
+	NinjaPkg: LinuxAmd64Config.NinjaPkg,
 
 	LLVMSrc:        defaultLLVMSrc,
 	LLVMSrcArchive: defaultLLVMSrcArchive,
@@ -64,19 +64,19 @@ var LinuxAmd64Ubuntu1604Config = &Config{
 
 var MacOSAmd64Config = &Config{
 	ClangBin: "clang+llvm-13.0.0-x86_64-apple-darwin/bin",
-	ClangArchive: &Archive{
+	ClangPkg: &Archive{
 		URL:    "https://github.com/llvm/llvm-project/releases/download/llvmorg-13.0.0/clang+llvm-13.0.0-x86_64-apple-darwin.tar.xz",
 		Sha256: "d051234eca1db1f5e4bc08c64937c879c7098900f7a0370f3ceb7544816a8b09",
 	},
 
 	CmakeBin: "cmake-3.22.1-macos-universal/CMake.app/Contents/bin",
-	CmakeArchive: &Archive{
+	CmakePkg: &Archive{
 		URL:    "https://github.com/Kitware/CMake/releases/download/v3.22.1/cmake-3.22.1-macos-universal.tar.gz",
 		Sha256: "9ba46ce69d524f5bcdf98076a6b01f727604fb31cf9005ec03dea1cf16da9514",
 	},
 
 	NinjaBin: defaultNinjaBin,
-	NinjaArchive: &Archive{
+	NinjaPkg: &Archive{
 		URL:    "https://github.com/ninja-build/ninja/releases/download/v1.10.2/ninja-mac.zip",
 		Sha256: "6fa359f491fac7e5185273c6421a000eea6a2f0febf0ac03ac900bd4d80ed2a5",
 	},
