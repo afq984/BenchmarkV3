@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
@@ -64,7 +65,7 @@ func (a *Archive) savePath() string {
 }
 
 // check that the downloaded archive matches the specified checksum
-func (a *Archive) check() error {
+func (a *Archive) check(ctx context.Context) error {
 	f, err := os.Open(a.savePath())
 	if err != nil {
 		return err
@@ -72,7 +73,7 @@ func (a *Archive) check() error {
 
 	log.Println("checking sha256:", a.savePath())
 	h := sha256.New()
-	_, err = io.Copy(h, f)
+	_, err = io.Copy(h, readerContext(ctx, f))
 	if err != nil {
 		return err
 	}
@@ -89,17 +90,21 @@ func (a *Archive) check() error {
 }
 
 // downloadWithoutChecks the archive without any checks
-func (a *Archive) downloadWithoutChecks() error {
+func (a *Archive) downloadWithoutChecks(ctx context.Context) error {
 	err := os.MkdirAll(downloadDir, 0755)
 	if err != nil {
 		return err
 	}
 
-	r, err := http.Get(a.URL)
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, a.URL, nil)
+	if err != nil {
+		panic(err)
+	}
+	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return err
 	}
-	defer r.Body.Close()
+	defer resp.Body.Close()
 
 	f, err := os.Create(a.savePath())
 	if err != nil {
@@ -107,7 +112,7 @@ func (a *Archive) downloadWithoutChecks() error {
 	}
 	defer f.Close()
 
-	_, err = io.Copy(f, r.Body)
+	_, err = io.Copy(f, resp.Body)
 	if err != nil {
 		return err
 	}
@@ -115,8 +120,8 @@ func (a *Archive) downloadWithoutChecks() error {
 	return nil
 }
 
-func (a *Archive) downloadWithChecks() error {
-	err := a.check()
+func (a *Archive) downloadWithChecks(ctx context.Context) error {
+	err := a.check(ctx)
 	if err == nil {
 		return nil
 	}
@@ -128,13 +133,13 @@ func (a *Archive) downloadWithChecks() error {
 		log.Printf("redownloading %s (%s)", a.savePath(), err)
 	}
 
-	err = a.downloadWithoutChecks()
+	err = a.downloadWithoutChecks(ctx)
 	if err != nil {
 		log.Println("download failed:", err)
 		return err
 	}
 
-	err = a.check()
+	err = a.check(ctx)
 	if err != nil {
 		log.Println("download failed:", err)
 		return err
@@ -143,8 +148,8 @@ func (a *Archive) downloadWithChecks() error {
 	return nil
 }
 
-func (a *Archive) DownloadAndExtract(buildDir string) error {
-	err := a.downloadWithChecks()
+func (a *Archive) DownloadAndExtract(ctx context.Context, buildDir string) error {
+	err := a.downloadWithChecks(ctx)
 	if err != nil {
 		return err
 	}
@@ -163,6 +168,6 @@ func (a *Archive) DownloadAndExtract(buildDir string) error {
 	return nil
 }
 
-func (a *Archive) SetUp(buildDir string) error {
-	return a.DownloadAndExtract(buildDir)
+func (a *Archive) SetUp(ctx context.Context, buildDir string) error {
+	return a.DownloadAndExtract(ctx, buildDir)
 }

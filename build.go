@@ -1,12 +1,14 @@
 package main
 
 import (
+	"context"
 	_ "embed"
 	"flag"
 	"io/ioutil"
 	"log"
 	"os"
 	"os/exec"
+	"os/signal"
 	"path/filepath"
 	"sync"
 	"time"
@@ -44,6 +46,11 @@ func Build(c *Config) (time.Duration, error) {
 	var buildDir string
 	var err error
 
+	ctx, cancel := context.WithCancel(context.TODO())
+	defer cancel()
+	ctx, stop := signal.NotifyContext(ctx, os.Interrupt)
+	defer stop()
+
 	buildDir, err = ioutil.TempDir(".", "build.*")
 	if err != nil {
 		log.Println("failed to create build directory")
@@ -73,12 +80,13 @@ func Build(c *Config) (time.Duration, error) {
 			go func(p Package) {
 				defer wg.Done()
 
-				lerr := p.SetUp(buildDir)
+				lerr := p.SetUp(ctx, buildDir)
 				if lerr != nil {
 					errMux.Lock()
 					defer errMux.Unlock()
 
 					err = lerr
+					cancel()
 				}
 			}(p)
 		}

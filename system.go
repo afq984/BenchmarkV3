@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"log"
 	"os"
 	"os/exec"
@@ -13,7 +14,7 @@ type System struct {
 
 var _ Package = &System{}
 
-func (s *System) SetUp(buildDir string) error {
+func (s *System) SetUp(ctx context.Context, buildDir string) error {
 	p, err := exec.LookPath(s.Name)
 	if err != nil {
 		log.Printf("cannot find %q in system path", s.Name)
