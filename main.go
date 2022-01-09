@@ -13,15 +13,44 @@ func main() {
 	log.SetFlags(log.Lshortfile)
 
 	var (
-		config    string
-		detect    bool
-		outputURL string
+		config       string
+		detect       bool
+		outputURL    string
+		downloadOnly bool
 	)
 	pflag.StringVarP(&config, "config", "c", "auto", "config to use")
 	pflag.BoolVar(&detect, "detect", false, "detect the system only; don't run any benchmarks")
 	pflag.StringVar(&outputURL, "output-url", "", "write submission URL to file")
+	pflag.BoolVar(&downloadOnly, "download-only", false, "only download the files; don't run any benchmarks")
 	pflag.Parse()
 
+	if downloadOnly {
+		downloadMain(config)
+	} else {
+		benchmarkMain(detect, config, outputURL)
+	}
+}
+
+func getConfig(config string) *Config {
+	if config == "auto" {
+		config = autoselectConfig()
+		log.Printf("auto selected config %q, if this is not what you want, change it with the -c flag", config)
+	}
+
+	cfg, ok := configs[config]
+	if !ok {
+		log.Fatalf("unknown config: %q", config)
+	}
+
+	return cfg
+}
+
+func downloadMain(config string) {
+	cfg := getConfig(config)
+	DownloadOnly(cfg)
+}
+
+func benchmarkMain(detect bool, config string, outputURL string) {
 	var (
 		track string
 		dt    time.Duration
@@ -39,16 +68,7 @@ func main() {
 			track = "standard"
 		}
 
-		if config == "auto" {
-			config = autoselectConfig()
-			log.Printf("auto selected config %q, if this is not what you want, change it with the -c flag", config)
-		}
-
-		cfg, ok := configs[config]
-		if !ok {
-			log.Printf("unknown config: %q", config)
-			os.Exit(1)
-		}
+		cfg := getConfig(config)
 		dt, err = Build(cfg)
 
 		if err != nil {

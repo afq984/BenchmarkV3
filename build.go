@@ -43,11 +43,40 @@ func run(name string, args ...string) error {
 	return err
 }
 
+func DownloadOnly(c *Config) error {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	ctx, stop := signal.NotifyContext(ctx, os.Interrupt)
+	defer stop()
+
+	errs := make(chan error)
+	count := 0
+
+	for _, p := range c.Packages() {
+		if a, ok := p.(*Archive); ok {
+			count++
+			go func(a *Archive) {
+				errs <- a.downloadWithChecks(ctx)
+			}(a)
+		}
+	}
+
+	var err error
+	for i := 0; i < count; i++ {
+		lerr := <-errs
+		if lerr != nil {
+			lerr = err
+			cancel()
+		}
+	}
+	return err
+}
+
 func Build(c *Config) (time.Duration, error) {
 	var buildDir string
 	var err error
 
-	ctx, cancel := context.WithCancel(context.TODO())
+	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 	ctx, stop := signal.NotifyContext(ctx, os.Interrupt)
 	defer stop()
