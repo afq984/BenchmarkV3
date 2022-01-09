@@ -31,7 +31,7 @@ func main() {
 	}
 }
 
-func getConfig(config string) *Config {
+func getConfig(config string) (name string, cfg *Config) {
 	if config == "auto" {
 		config = autoselectConfig()
 		log.Printf("auto selected config %q, if this is not what you want, change it with the -c flag", config)
@@ -42,11 +42,11 @@ func getConfig(config string) *Config {
 		log.Fatalf("unknown config: %q", config)
 	}
 
-	return cfg
+	return config, cfg
 }
 
 func downloadMain(config string) {
-	cfg := getConfig(config)
+	_, cfg := getConfig(config)
 	DownloadOnly(cfg)
 }
 
@@ -55,6 +55,7 @@ func benchmarkMain(detect bool, config string, outputURL string) {
 		track string
 		dt    time.Duration
 		err   error
+		cfg   *Config
 	)
 
 	if detect {
@@ -68,7 +69,7 @@ func benchmarkMain(detect bool, config string, outputURL string) {
 			track = "standard"
 		}
 
-		cfg := getConfig(config)
+		config, cfg = getConfig(config)
 		dt, err = Build(cfg)
 
 		if err != nil {
