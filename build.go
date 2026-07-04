@@ -26,13 +26,16 @@ func init() {
 	pflag.BoolVar(&quick, "quick", false, "do a quick build to check configuration")
 }
 
-func run(name string, args ...string) error {
+func run(env []string, name string, args ...string) error {
 	cmd := exec.Command(
 		name,
 		args...,
 	)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
+	if len(env) > 0 {
+		cmd.Env = append(os.Environ(), env...)
+	}
 	log.Println("running:", cmd)
 
 	err := cmd.Run()
@@ -141,7 +144,18 @@ func Build(c *Config) (time.Duration, error) {
 		return 0, err
 	}
 
+	// The toolchain's lld lists libxml2.so.2 as NEEDED but never calls it for
+	// ELF linking. If the host lacks it, provide a stub via LD_LIBRARY_PATH so
+	// cmake's compiler checks and the build can link. When the host already has
+	// a (versioned) libxml2.so.2 we must not interpose, so this probes lld first.
+	buildEnv, err := libxml2StubEnv(buildDir, buildAbsPath(filepath.Join("clang-bin", "lld")))
+	if err != nil {
+		log.Println("failed to set up libxml2 stub:", err)
+		return 0, err
+	}
+
 	err = run(
+		buildEnv,
 		buildAbsPath(c.Cmake()),
 		"-B", buildAbsPath("out"),
 		"-S", buildAbsPath(c.LLVMSrc),
@@ -163,6 +177,7 @@ func Build(c *Config) (time.Duration, error) {
 		buildTarget = "llvm-cxxfilt"
 	}
 	err = run(
+		buildEnv,
 		buildAbsPath(c.Ninja()),
 		"-C", buildAbsPath("out"),
 		buildTarget,

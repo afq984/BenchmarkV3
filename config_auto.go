@@ -16,8 +16,12 @@ func autoselectConfig() string {
 	}
 	if runtime.GOOS == "darwin" {
 		switch runtime.GOARCH {
-		case "amd64", "arm64":
-			return "macos-amd64"
+		case "arm64":
+			return "macos-arm64"
+		case "amd64":
+			// Intel Macs are no longer supported: LLVM 22 ships no native
+			// x86_64 macOS toolchain (only arm64). Use an Apple Silicon Mac.
+			log.Fatalf("Intel Macs are not supported by this benchmark version (no native x86_64 macOS LLVM build); run on Apple Silicon")
 		}
 	}
 	log.Fatalf("Unknown GOOS and GOARCH combination: %s, %s", runtime.GOOS, runtime.GOARCH)

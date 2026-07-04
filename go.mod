@@ -1,6 +1,6 @@
 module github.com/afq984/BenchmarkV3
 
-go 1.17
+go 1.24
 
 require (
 	github.com/mholt/archiver/v4 v4.0.0-alpha.1

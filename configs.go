@@ -4,12 +4,15 @@ const downloadDir = "dl"
 
 const (
 	defaultNinjaBin = "."
-	defaultLLVMSrc  = "llvm-13.0.0.src"
+	// The LLVM monorepo source tree; cmake is pointed at the llvm/ subdir.
+	// Since LLVM 20 the per-subproject source tarballs (llvm-X.src.tar.xz) are
+	// no longer published, so we use the full llvm-project source tarball.
+	defaultLLVMSrc = "llvm-project-22.1.8.src/llvm"
 )
 
 var defaultLLVMSrcArchive = &Archive{
-	URL:    "https://github.com/llvm/llvm-project/releases/download/llvmorg-13.0.0/llvm-13.0.0.src.tar.xz",
-	Sha256: "408d11708643ea826f519ff79761fcdfc12d641a2510229eec459e72f8163020",
+	URL:    "https://github.com/llvm/llvm-project/releases/download/llvmorg-22.1.8/llvm-project-22.1.8.src.tar.xz",
+	Sha256: "922f1817a0df7b1489272d18134ee0087a8b068828f87ac63b9861b1a9965888",
 }
 
 var defaultDebianSysrootArchive = &Archive{
@@ -19,10 +22,10 @@ var defaultDebianSysrootArchive = &Archive{
 }
 
 var LinuxAmd64Config = &Config{
-	ClangBin: "clang+llvm-13.0.0-x86_64-linux-gnu-ubuntu-20.04/bin",
+	ClangBin: "LLVM-22.1.8-Linux-X64/bin",
 	ClangPkg: &Archive{
-		URL:    "https://github.com/llvm/llvm-project/releases/download/llvmorg-13.0.0/clang+llvm-13.0.0-x86_64-linux-gnu-ubuntu-20.04.tar.xz",
-		Sha256: "2c2fb857af97f41a5032e9ecadf7f78d3eff389a5cd3c9ec620d24f134ceb3c8",
+		URL:    "https://github.com/llvm/llvm-project/releases/download/llvmorg-22.1.8/LLVM-22.1.8-Linux-X64.tar.xz",
+		Sha256: "df0e1ecf16caf3489a272a5eea4eec9b0d82878f6477fa309504f918a0006384",
 	},
 
 	CmakeBin: "cmake-3.22.1-linux-x86_64/bin",
@@ -33,28 +36,9 @@ var LinuxAmd64Config = &Config{
 
 	NinjaBin: defaultNinjaBin,
 	NinjaPkg: &Archive{
-		URL:    "https://github.com/ninja-build/ninja/releases/download/v1.10.2/ninja-linux.zip",
-		Sha256: "763464859c7ef2ea3a0a10f4df40d2025d3bb9438fcb1228404640410c0ec22d",
+		URL:    "https://github.com/ninja-build/ninja/releases/download/v1.12.1/ninja-linux.zip",
+		Sha256: "6f98805688d19672bd699fbbfa2c2cf0fc054ac3df1f0e6a47664d963d530255",
 	},
-
-	LLVMSrc:        defaultLLVMSrc,
-	LLVMSrcArchive: defaultLLVMSrcArchive,
-
-	DebianSysrootArchive: defaultDebianSysrootArchive,
-}
-
-var LinuxAmd64Ubuntu1604Config = &Config{
-	ClangBin: "clang+llvm-13.0.0-x86_64-linux-gnu-ubuntu-16.04/bin",
-	ClangPkg: &Archive{
-		URL:    "https://github.com/llvm/llvm-project/releases/download/llvmorg-13.0.0/clang+llvm-13.0.0-x86_64-linux-gnu-ubuntu-16.04.tar.xz",
-		Sha256: "76d0bf002ede7a893f69d9ad2c4e101d15a8f4186fbfe24e74856c8449acd7c1",
-	},
-
-	CmakeBin: LinuxAmd64Config.CmakeBin,
-	CmakePkg: LinuxAmd64Config.CmakePkg,
-
-	NinjaBin: defaultNinjaBin,
-	NinjaPkg: LinuxAmd64Config.NinjaPkg,
 
 	LLVMSrc:        defaultLLVMSrc,
 	LLVMSrcArchive: defaultLLVMSrcArchive,
@@ -63,10 +47,10 @@ var LinuxAmd64Ubuntu1604Config = &Config{
 }
 
 var LinuxArm64Config = &Config{
-	ClangBin: "clang+llvm-13.0.0-aarch64-linux-gnu/bin",
+	ClangBin: "LLVM-22.1.8-Linux-ARM64/bin",
 	ClangPkg: &Archive{
-		URL:    "https://github.com/llvm/llvm-project/releases/download/llvmorg-13.0.0/clang+llvm-13.0.0-aarch64-linux-gnu.tar.xz",
-		Sha256: "968d65d2593850ee9b37fcda074fb7641529bd45d2f976af6c8197de3c22612f",
+		URL:    "https://github.com/llvm/llvm-project/releases/download/llvmorg-22.1.8/LLVM-22.1.8-Linux-ARM64.tar.xz",
+		Sha256: "805efad2bb91cb4967fa569e0881d10c0f69c04461cf671cccbae19f547acc34",
 	},
 
 	CmakeBin: "cmake-3.22.1-linux-aarch64/bin",
@@ -76,8 +60,9 @@ var LinuxArm64Config = &Config{
 	},
 
 	NinjaBin: defaultNinjaBin,
-	NinjaPkg: &System{
-		Name: "ninja",
+	NinjaPkg: &Archive{
+		URL:    "https://github.com/ninja-build/ninja/releases/download/v1.12.1/ninja-linux-aarch64.zip",
+		Sha256: "5c25c6570b0155e95fce5918cb95f1ad9870df5768653afe128db822301a05a1",
 	},
 
 	LLVMSrc:        defaultLLVMSrc,
@@ -86,11 +71,11 @@ var LinuxArm64Config = &Config{
 	DebianSysrootArchive: defaultDebianSysrootArchive,
 }
 
-var MacOSAmd64Config = &Config{
-	ClangBin: "clang+llvm-13.0.0-x86_64-apple-darwin/bin",
+var MacOSArm64Config = &Config{
+	ClangBin: "LLVM-22.1.8-macOS-ARM64/bin",
 	ClangPkg: &Archive{
-		URL:    "https://github.com/llvm/llvm-project/releases/download/llvmorg-13.0.0/clang+llvm-13.0.0-x86_64-apple-darwin.tar.xz",
-		Sha256: "d051234eca1db1f5e4bc08c64937c879c7098900f7a0370f3ceb7544816a8b09",
+		URL:    "https://github.com/llvm/llvm-project/releases/download/llvmorg-22.1.8/LLVM-22.1.8-macOS-ARM64.tar.xz",
+		Sha256: "f260f4f7c0d430828a81ae8a3826a1d63fc0963ec2459489308cc23b1f7eab4f",
 	},
 
 	CmakeBin: "cmake-3.22.1-macos-universal/CMake.app/Contents/bin",
@@ -101,8 +86,8 @@ var MacOSAmd64Config = &Config{
 
 	NinjaBin: defaultNinjaBin,
 	NinjaPkg: &Archive{
-		URL:    "https://github.com/ninja-build/ninja/releases/download/v1.10.2/ninja-mac.zip",
-		Sha256: "6fa359f491fac7e5185273c6421a000eea6a2f0febf0ac03ac900bd4d80ed2a5",
+		URL:    "https://github.com/ninja-build/ninja/releases/download/v1.12.1/ninja-mac.zip",
+		Sha256: "89a287444b5b3e98f88a945afa50ce937b8ffd1dcc59c555ad9b1baf855298c9",
 	},
 
 	LLVMSrc:        defaultLLVMSrc,
@@ -112,8 +97,7 @@ var MacOSAmd64Config = &Config{
 }
 
 var configs = map[string]*Config{
-	"linux-amd64":            LinuxAmd64Config,
-	"linux-amd64-ubuntu1604": LinuxAmd64Ubuntu1604Config,
-	"linux-arm64":            LinuxArm64Config,
-	"macos-amd64":            MacOSAmd64Config,
+	"linux-amd64": LinuxAmd64Config,
+	"linux-arm64": LinuxArm64Config,
+	"macos-arm64": MacOSArm64Config,
 }
