@@ -20,6 +20,11 @@ type Result struct {
 
 const unknown = "<unknown>"
 
+// benchmarkVersion is reported as the V query parameter so the results page can
+// route each version to its own form: different versions use different
+// toolchains and their build times are not comparable.
+const benchmarkVersion = "3.1"
+
 func populateSystem(r *Result) {
 	var err error
 	r.Hostname, err = os.Hostname()
@@ -51,6 +56,7 @@ func submissionURL(r *Result) string {
 	}
 
 	q := u.Query()
+	q.Add("V", benchmarkVersion)
 	q.Add("T", strconv.FormatFloat(r.Time, 'g', -1, 64))
 	q.Add("K", r.Track)
 	q.Add("G", r.Config)
