@@ -9,10 +9,6 @@ build out/BenchmarkV3-linux-arm64: go
   os = linux
   arch = arm64
 
-build out/BenchmarkV3-macos-amd64: go
-  os = darwin
-  arch = amd64
-
 build out/BenchmarkV3-macos-arm64: go
   os = darwin
   arch = arm64

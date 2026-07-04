@@ -13,6 +13,7 @@ Go to the [release page](https://github.com/afq984/BenchmarkV3/releases/tag/late
 to download the latest build and run directly.
 
 ```
+# V is one of: linux-amd64, linux-arm64, macos-arm64
 V=linux-amd64
 curl -o BenchmarkV3 -L https://github.com/afq984/BenchmarkV3/releases/download/latest/BenchmarkV3-$V
 chmod +x BenchmarkV3
@@ -37,29 +38,39 @@ go build .
 
 *   `-c <config>`: Use a specific config:
     *   `auto` - Auto detect the config to use (default)
-    *   `linux-amd64` - Works on ubuntu 20.04 or up-to-date linux systems
-    *   `linux-amd64-ubuntu1604` - Try this one on older linux systems
-    *   `linux-arm64` - For ARM64 linux systems. To use this config, you need to have [ninja] on your system.
-    *   `macos-amd64` - Use this on macOS. Should also work on M1 through [Rosetta].
+    *   `linux-amd64` - For x86-64 Linux systems (requires glibc 2.34+, e.g. Ubuntu 22.04 / Debian 12 / RHEL 9 or newer)
+    *   `linux-arm64` - For ARM64 Linux systems (same glibc 2.34+ requirement)
+    *   `macos-arm64` - For Apple Silicon Macs (requires macOS 14 Sonoma or newer)
 
 ## FAQ
 
-*   Why no `macos-arm64` config?
+*   Why is there no `macos-amd64` (Intel Mac) config?
 
-    [LLVM 13.0.0](https://github.com/llvm/llvm-project/releases/tag/llvmorg-13.0.0) does not have a arm64 clang+llvm binary for macOS.
+    Since [LLVM 20](https://github.com/llvm/llvm-project/releases/tag/llvmorg-20.1.0) the official releases no longer ship a native x86-64 macOS toolchain — only Apple Silicon (`arm64`).
+    This benchmark now uses the native `arm64` build, so Intel Macs are no longer supported.
 
-*   Missing `libtinfo.so.6` or `libtinfo.so.5` on linux.
+*   What are the OS requirements?
 
-    You need to install `libncurses6` or `libncurses5`, respectively.
-    The naming of the package depends on your distribution.
+    The prebuilt toolchain is produced by LLVM's release CI on Ubuntu 22.04 / macOS 14, so:
 
-    Currently:
+    *   Linux (`linux-amd64`, `linux-arm64`): glibc 2.34 and a GCC 12-era `libstdc++`
+        — Ubuntu 22.04, Debian 12, RHEL/Rocky/Alma 9, Fedora 35 or newer.
+        Older distros (RHEL 8, CentOS 7, Ubuntu 20.04) are not supported.
+    *   macOS (`macos-arm64`): macOS 14 (Sonoma) or newer.
 
-    *   requires `libtinfo.so.6`: `linux-amd64`
-    *   requires `libtinfo.so.5`: `linux-amd64-ubuntu1604`, `linux-arm64`
+    Unlike older versions, the LLVM toolchain no longer links `libtinfo` / `libncurses`,
+    so no ncurses package is required.
+
+*   Do I need `libxml2` installed on linux?
+
+    No. The toolchain's `lld` linker lists `libxml2.so.2` as a dependency, but
+    only uses it for Windows output — it never calls it when linking for Linux.
+    On hosts that lack `libxml2.so.2` (minimal installs, or rolling-release
+    distros that renamed it to `libxml2.so.16`), the benchmark automatically
+    generates a tiny stub `libxml2.so.2` in its build directory so linking works.
+    No package or symlink is required.
 
 [clang]: https://clang.llvm.org/
 [cmake]: https://cmake.org/
 [ninja]: https://ninja-build.org/
 [llc]: https://llvm.org/docs/CommandGuide/llc.html
-[Rosetta]: https://developer.apple.com/documentation/apple-silicon/about-the-rosetta-translation-environment
