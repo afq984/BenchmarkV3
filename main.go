@@ -78,17 +78,27 @@ func benchmarkMain(detect bool, config string, outputURL string) {
 		}
 	}
 
-	fmt.Println()
-	fmt.Println("build completed in", dt)
-	fmt.Println("builds per hour:", float64(time.Hour)/float64(dt))
-	fmt.Println()
-
 	r := &Result{
 		Track:  track,
 		Config: config,
 		Time:   float64(dt) / float64(time.Second),
 	}
 	populateSystem(r)
+
+	fmt.Println()
+	if detect {
+		// --detect only reports what was detected; there is no result to submit.
+		fmt.Println("detected system:")
+		fmt.Printf("  hostname: %s\n", r.Hostname)
+		fmt.Printf("  cpu:      %s\n", r.CPU)
+		fmt.Printf("  memory:   %d bytes (%.1f GiB)\n", r.Memory, float64(r.Memory)/(1<<30))
+		fmt.Printf("  misc:     %s\n", r.Misc)
+		return
+	}
+
+	fmt.Println("build completed in", dt)
+	fmt.Println("builds per hour:", float64(time.Hour)/float64(dt))
+	fmt.Println()
 
 	fmt.Println("Visit the following link to submit the results:")
 	fmt.Println(submissionURL(r))
