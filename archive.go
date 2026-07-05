@@ -56,8 +56,22 @@ func writeSymlink(ctx context.Context, path string, f archiver.File) error {
 	return os.Symlink(f.LinkTarget, path)
 }
 
-func makeFileHandler(destination string) archiver.FileHandler {
+// topRelPath returns name with its first path component (the archive's single
+// top-level directory) removed, e.g. "LLVM-22.1.8-Linux-X64/bin/clang" ->
+// "bin/clang". The top-level entry itself maps to "".
+func topRelPath(name string) string {
+	if i := strings.IndexByte(name, '/'); i >= 0 {
+		return name[i+1:]
+	}
+	return ""
+}
+
+func makeFileHandler(destination string, keep func(relPath string) bool) archiver.FileHandler {
 	return func(ctx context.Context, f archiver.File) error {
+		if keep != nil && !keep(topRelPath(f.NameInArchive)) {
+			return nil
+		}
+
 		path := filepath.Join(destination, f.NameInArchive)
 
 		err := os.MkdirAll(filepath.Dir(path), 0755)
@@ -67,7 +81,9 @@ func makeFileHandler(destination string) archiver.FileHandler {
 
 		switch {
 		case f.FileInfo.IsDir():
-			return os.Mkdir(path, f.Mode())
+			// MkdirAll (not Mkdir): the directory may already exist because a
+			// kept file created it, and entry order is not guaranteed.
+			return os.MkdirAll(path, f.Mode())
 		case f.FileInfo.Mode().IsRegular():
 			return writeFile(ctx, path, f)
 		case f.FileInfo.Mode()&fs.ModeSymlink != 0:
@@ -78,7 +94,7 @@ func makeFileHandler(destination string) archiver.FileHandler {
 	}
 }
 
-func unarchive(ctx context.Context, source, destination string) error {
+func unarchive(ctx context.Context, source, destination string, keep func(relPath string) bool) error {
 	var u archiver.Extractor
 	var d archiver.Decompressor
 	switch {
@@ -110,7 +126,7 @@ func unarchive(ctx context.Context, source, destination string) error {
 		}
 	}
 
-	return u.Extract(ctx, r, nil, makeFileHandler(destination))
+	return u.Extract(ctx, r, nil, makeFileHandler(destination, keep))
 }
 
 type mismatchedSha256 struct {
@@ -128,6 +144,11 @@ type Archive struct {
 	URL       string
 	Sha256    string
 	ExtractTo string
+	// Keep, if non-nil, restricts extraction to entries whose path relative to
+	// the archive's top-level directory it accepts (parent directories of kept
+	// files are created automatically). Used to skip the many gigabytes of the
+	// LLVM toolchain and source tree that building llc never touches.
+	Keep func(relPath string) bool
 }
 
 var _ Package = &Archive{}
@@ -240,7 +261,7 @@ func (a *Archive) DownloadAndExtract(ctx context.Context, buildDir string) error
 	if a.ExtractTo != "" {
 		extractTo = filepath.Join(extractTo, a.ExtractTo)
 	}
-	err = unarchive(ctx, a.savePath(), extractTo)
+	err = unarchive(ctx, a.savePath(), extractTo, a.Keep)
 	if err != nil {
 		log.Println("extract failed:", err)
 		return err
