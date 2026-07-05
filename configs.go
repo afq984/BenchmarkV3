@@ -1,6 +1,38 @@
 package main
 
+import "strings"
+
 const downloadDir = "dl"
+
+// keepPaths builds an Archive.Keep filter. A pattern ending in "/" keeps that
+// directory and everything under it; any other pattern keeps an exact path.
+func keepPaths(patterns ...string) func(string) bool {
+	return func(p string) bool {
+		for _, pat := range patterns {
+			if strings.HasSuffix(pat, "/") {
+				if strings.HasPrefix(p, pat) {
+					return true
+				}
+			} else if p == pat {
+				return true
+			}
+		}
+		return false
+	}
+}
+
+// The build runs only a few of the toolchain's (statically linked) tools, so we
+// extract just those plus clang's resource headers instead of the full ~12 GB.
+var toolchainKeep = keepPaths(
+	"bin/clang", "bin/clang++", "bin/clang-22",
+	"bin/lld", "bin/ld.lld",
+	"bin/llvm-tblgen", "bin/llvm-ar", "bin/llvm-ranlib",
+	"lib/clang/",
+)
+
+// Building llc needs only the llvm project and the shared cmake / third-party
+// modules it references; the monorepo's other projects are skipped.
+var llvmSrcKeep = keepPaths("llvm/", "cmake/", "third-party/")
 
 const (
 	defaultNinjaBin = "."
@@ -13,6 +45,7 @@ const (
 var defaultLLVMSrcArchive = &Archive{
 	URL:    "https://github.com/llvm/llvm-project/releases/download/llvmorg-22.1.8/llvm-project-22.1.8.src.tar.xz",
 	Sha256: "922f1817a0df7b1489272d18134ee0087a8b068828f87ac63b9861b1a9965888",
+	Keep:   llvmSrcKeep,
 }
 
 var defaultDebianSysrootArchive = &Archive{
@@ -26,6 +59,7 @@ var LinuxAmd64Config = &Config{
 	ClangPkg: &Archive{
 		URL:    "https://github.com/llvm/llvm-project/releases/download/llvmorg-22.1.8/LLVM-22.1.8-Linux-X64.tar.xz",
 		Sha256: "df0e1ecf16caf3489a272a5eea4eec9b0d82878f6477fa309504f918a0006384",
+		Keep:   toolchainKeep,
 	},
 
 	CmakeBin: "cmake-3.22.1-linux-x86_64/bin",
@@ -51,6 +85,7 @@ var LinuxArm64Config = &Config{
 	ClangPkg: &Archive{
 		URL:    "https://github.com/llvm/llvm-project/releases/download/llvmorg-22.1.8/LLVM-22.1.8-Linux-ARM64.tar.xz",
 		Sha256: "805efad2bb91cb4967fa569e0881d10c0f69c04461cf671cccbae19f547acc34",
+		Keep:   toolchainKeep,
 	},
 
 	CmakeBin: "cmake-3.22.1-linux-aarch64/bin",
@@ -76,6 +111,7 @@ var MacOSArm64Config = &Config{
 	ClangPkg: &Archive{
 		URL:    "https://github.com/llvm/llvm-project/releases/download/llvmorg-22.1.8/LLVM-22.1.8-macOS-ARM64.tar.xz",
 		Sha256: "f260f4f7c0d430828a81ae8a3826a1d63fc0963ec2459489308cc23b1f7eab4f",
+		Keep:   toolchainKeep,
 	},
 
 	CmakeBin: "cmake-3.22.1-macos-universal/CMake.app/Contents/bin",
