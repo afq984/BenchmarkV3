@@ -9,8 +9,19 @@ so hopefully it benchmarks the same thing on different systems.
 
 ## Run prebuilt
 
-Go to the [release page](https://github.com/afq984/BenchmarkV3/releases/tag/latest)
-to download the latest build and run directly.
+Run the latest build for your platform:
+
+```
+curl -fsSL https://afq984.github.io/BenchmarkV3/run.sh | sh
+```
+
+Append `-s -- --quick` for a quick build:
+
+```
+curl -fsSL https://afq984.github.io/BenchmarkV3/run.sh | sh -s -- --quick
+```
+
+Or download the binary yourself from the [release page](https://github.com/afq984/BenchmarkV3/releases/tag/latest):
 
 ```
 # V is one of: linux-amd64, linux-arm64, macos-arm64
