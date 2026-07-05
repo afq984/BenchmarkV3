@@ -24,9 +24,14 @@ func keepPaths(patterns ...string) func(string) bool {
 // The build runs only a few of the toolchain's (statically linked) tools, so we
 // extract just those plus clang's resource headers instead of the full ~12 GB.
 var toolchainKeep = keepPaths(
+	// unix names (clang++ -> clang -> clang-22 and ld.lld -> lld are symlinks)
 	"bin/clang", "bin/clang++", "bin/clang-22",
 	"bin/lld", "bin/ld.lld",
 	"bin/llvm-tblgen", "bin/llvm-ar", "bin/llvm-ranlib",
+	// windows names (separate .exe copies; no clang-22)
+	"bin/clang.exe", "bin/clang++.exe",
+	"bin/lld.exe", "bin/ld.lld.exe",
+	"bin/llvm-tblgen.exe", "bin/llvm-ar.exe", "bin/llvm-ranlib.exe",
 	"lib/clang/",
 )
 
@@ -132,8 +137,49 @@ var MacOSArm64Config = &Config{
 	DebianSysrootArchive: defaultDebianSysrootArchive,
 }
 
+var WindowsAmd64Config = &Config{
+	ClangBin: "clang+llvm-22.1.8-x86_64-pc-windows-msvc/bin",
+	ClangPkg: &Archive{
+		URL:    "https://github.com/llvm/llvm-project/releases/download/llvmorg-22.1.8/clang+llvm-22.1.8-x86_64-pc-windows-msvc.tar.xz",
+		Sha256: "d96c2cc1736f4eb7fa43cb9bbdf56d93551a9ae0a9aadb9c99c3c3b2b712a234",
+		Keep:   toolchainKeep,
+	},
+
+	CmakeBin: "cmake-3.22.1-windows-x86_64/bin",
+	CmakePkg: &Archive{
+		URL:    "https://github.com/Kitware/CMake/releases/download/v3.22.1/cmake-3.22.1-windows-x86_64.zip",
+		Sha256: "35fbbb7d9ffa491834bbc79cdfefc6c360088a3c9bf55c29d111a5afa04cdca3",
+	},
+
+	NinjaBin: defaultNinjaBin,
+	NinjaPkg: &Archive{
+		URL:    "https://github.com/ninja-build/ninja/releases/download/v1.12.1/ninja-win.zip",
+		Sha256: "f550fec705b6d6ff58f2db3c374c2277a37691678d6aba463adcbb129108467a",
+	},
+
+	// LLVM's cmake requires Python 3; provide the embeddable interpreter since
+	// Windows has none by default.
+	PythonPkg: &Archive{
+		URL:       "https://www.python.org/ftp/python/3.13.1/python-3.13.1-embed-amd64.zip",
+		Sha256:    "7b7923ff0183a8b8fca90f6047184b419b108cb437f75fc1c002f9d2f8bcec16",
+		ExtractTo: "python",
+	},
+	Python: "python/python.exe",
+
+	// A Windows host running a clang that targets aarch64-linux is neither MSVC
+	// nor MinGW, so LLVM's cmake falls back to config.guess (a shell script it
+	// cannot run) and fails to detect the host arch. Set the host triple directly.
+	CmakeArgs: []string{"-DLLVM_HOST_TRIPLE=x86_64-pc-windows-msvc"},
+
+	LLVMSrc:        defaultLLVMSrc,
+	LLVMSrcArchive: defaultLLVMSrcArchive,
+
+	DebianSysrootArchive: defaultDebianSysrootArchive,
+}
+
 var configs = map[string]*Config{
-	"linux-amd64": LinuxAmd64Config,
-	"linux-arm64": LinuxArm64Config,
-	"macos-arm64": MacOSArm64Config,
+	"linux-amd64":   LinuxAmd64Config,
+	"linux-arm64":   LinuxArm64Config,
+	"macos-arm64":   MacOSArm64Config,
+	"windows-amd64": WindowsAmd64Config,
 }

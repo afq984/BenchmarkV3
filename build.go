@@ -9,6 +9,7 @@ import (
 	"os/exec"
 	"os/signal"
 	"path/filepath"
+	"runtime"
 	"sync"
 	"time"
 
@@ -137,10 +138,17 @@ func Build(c *Config) (time.Duration, error) {
 		return 0, err
 	}
 
-	// symlink so we can have a static cmake toolchain file
-	err = os.Symlink(c.ClangBin, filepath.Join(buildDir, "clang-bin"))
+	// A stable "clang-bin" path lets the cmake toolchain file stay static. A
+	// directory symlink needs a privilege we may lack on Windows, so use a
+	// junction there (which does not); a relative symlink elsewhere.
+	if runtime.GOOS == "windows" {
+		err = exec.Command("cmd", "/c", "mklink", "/J",
+			buildAbsPath("clang-bin"), buildAbsPath(c.ClangBin)).Run()
+	} else {
+		err = os.Symlink(c.ClangBin, filepath.Join(buildDir, "clang-bin"))
+	}
 	if err != nil {
-		log.Println("cannot create symlink for clang-bin")
+		log.Println("cannot create clang-bin link")
 		return 0, err
 	}
 
@@ -154,19 +162,22 @@ func Build(c *Config) (time.Duration, error) {
 		return 0, err
 	}
 
-	err = run(
-		buildEnv,
-		buildAbsPath(c.Cmake()),
+	cmakeArgs := []string{
 		"-B", buildAbsPath("out"),
 		"-S", buildAbsPath(c.LLVMSrc),
 		"-G", "Ninja",
-		"-DCMAKE_MAKE_PROGRAM="+buildAbsPath(c.Ninja()),
-		"-DCMAKE_TOOLCHAIN_FILE="+buildAbsPath(toolchainFileName),
+		"-DCMAKE_MAKE_PROGRAM=" + buildAbsPath(c.Ninja()),
+		"-DCMAKE_TOOLCHAIN_FILE=" + buildAbsPath(toolchainFileName),
 		"-DCMAKE_BUILD_TYPE=Release", // debug builds sadly take too much disk space
 		"-DLLVM_ENABLE_PROJECTS=",
-		"-DLLVM_TABLEGEN="+buildAbsPath(c.LLVMTblgen()),
+		"-DLLVM_TABLEGEN=" + buildAbsPath(c.LLVMTblgen()),
 		"-DLLVM_TARGETS_TO_BUILD=X86",
-	)
+	}
+	if c.Python != "" {
+		cmakeArgs = append(cmakeArgs, "-DPython3_EXECUTABLE="+buildAbsPath(c.Python))
+	}
+	cmakeArgs = append(cmakeArgs, c.CmakeArgs...)
+	err = run(buildEnv, buildAbsPath(c.Cmake()), cmakeArgs...)
 	if err != nil {
 		return 0, err
 	}

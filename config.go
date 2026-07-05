@@ -1,6 +1,17 @@
 package main
 
-import "path/filepath"
+import (
+	"path/filepath"
+	"runtime"
+)
+
+// exe appends the host executable suffix (".exe" on Windows) to a tool path.
+func exe(path string) string {
+	if runtime.GOOS == "windows" {
+		return path + ".exe"
+	}
+	return path
+}
 
 type Config struct {
 	ClangBin             string
@@ -12,29 +23,43 @@ type Config struct {
 	LLVMSrc              string
 	LLVMSrcArchive       *Archive
 	DebianSysrootArchive *Archive
+
+	// PythonPkg provides a Python 3 interpreter that LLVM's cmake requires;
+	// Linux/macOS use the system python3, so only the Windows config sets it.
+	// Python is the path to python.exe relative to buildDir.
+	PythonPkg Package
+	Python    string
+
+	// CmakeArgs are extra -D flags appended to the cmake configure command,
+	// for host-specific quirks (e.g. LLVM_HOST_TRIPLE on Windows).
+	CmakeArgs []string
 }
 
 func (c *Config) Packages() []Package {
-	return []Package{
+	pkgs := []Package{
 		c.ClangPkg,
 		c.CmakePkg,
 		c.NinjaPkg,
 		c.LLVMSrcArchive,
 		c.DebianSysrootArchive,
 	}
+	if c.PythonPkg != nil {
+		pkgs = append(pkgs, c.PythonPkg)
+	}
+	return pkgs
 }
 
 // llvm-tblgen path relative to buildDir
 func (c *Config) LLVMTblgen() string {
-	return filepath.Join(c.ClangBin, "llvm-tblgen")
+	return exe(filepath.Join(c.ClangBin, "llvm-tblgen"))
 }
 
 // cmake path relative to buildDir
 func (c *Config) Cmake() string {
-	return filepath.Join(c.CmakeBin, "cmake")
+	return exe(filepath.Join(c.CmakeBin, "cmake"))
 }
 
 // ninja path relative to buildDir
 func (c *Config) Ninja() string {
-	return filepath.Join(c.NinjaBin, "ninja")
+	return exe(filepath.Join(c.NinjaBin, "ninja"))
 }

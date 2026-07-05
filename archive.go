@@ -13,6 +13,7 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"runtime"
 	"strings"
 
 	"github.com/mholt/archiver/v4"
@@ -66,7 +67,14 @@ func topRelPath(name string) string {
 	return ""
 }
 
-func makeFileHandler(destination string, keep func(relPath string) bool) archiver.FileHandler {
+// pendingLink is a symlink deferred during extraction so it can be materialized
+// after all real files exist (see materializeLinks).
+type pendingLink struct {
+	path   string
+	target string
+}
+
+func makeFileHandler(destination string, keep func(relPath string) bool, links *[]pendingLink) archiver.FileHandler {
 	return func(ctx context.Context, f archiver.File) error {
 		if keep != nil && !keep(topRelPath(f.NameInArchive)) {
 			return nil
@@ -87,11 +95,91 @@ func makeFileHandler(destination string, keep func(relPath string) bool) archive
 		case f.FileInfo.Mode().IsRegular():
 			return writeFile(ctx, path, f)
 		case f.FileInfo.Mode()&fs.ModeSymlink != 0:
+			if runtime.GOOS == "windows" {
+				// Windows symlinks need a privilege the process may not have;
+				// defer them and materialize as hardlinks/copies once every real
+				// file has been extracted.
+				*links = append(*links, pendingLink{path: path, target: f.LinkTarget})
+				return nil
+			}
 			return writeSymlink(ctx, path, f)
 		default:
 			return fmt.Errorf("cannot handle file mode: %v", f.FileInfo.Mode())
 		}
 	}
+}
+
+// materializeLinks recreates deferred symlinks (Windows only) by dereferencing
+// them: a symlink to a file becomes a hardlink (falling back to a copy), and a
+// symlink to a directory becomes a recursive copy. Chains are followed to the
+// real target. The sysroot's symlinks are all relative, so they resolve within
+// the extracted tree.
+func materializeLinks(links []pendingLink) error {
+	targetOf := make(map[string]string, len(links))
+	for _, l := range links {
+		t := filepath.FromSlash(l.target)
+		if !filepath.IsAbs(t) {
+			t = filepath.Join(filepath.Dir(l.path), t)
+		}
+		targetOf[filepath.Clean(l.path)] = filepath.Clean(t)
+	}
+	for _, l := range links {
+		cur := targetOf[filepath.Clean(l.path)]
+		for i := 0; i < 40; i++ {
+			next, ok := targetOf[cur]
+			if !ok {
+				break
+			}
+			cur = next
+		}
+		info, err := os.Stat(cur)
+		if err != nil {
+			continue // dangling target; the build does not use it
+		}
+		os.RemoveAll(l.path)
+		if info.IsDir() {
+			if err := copyTree(cur, l.path); err != nil {
+				return err
+			}
+		} else if os.Link(cur, l.path) != nil {
+			if err := copyFile(cur, l.path, info.Mode()); err != nil {
+				return err
+			}
+		}
+	}
+	return nil
+}
+
+func copyFile(src, dst string, mode fs.FileMode) error {
+	data, err := os.ReadFile(src)
+	if err != nil {
+		return err
+	}
+	return os.WriteFile(dst, data, mode)
+}
+
+func copyTree(src, dst string) error {
+	return filepath.WalkDir(src, func(p string, d fs.DirEntry, err error) error {
+		if err != nil {
+			return err
+		}
+		rel, err := filepath.Rel(src, p)
+		if err != nil {
+			return err
+		}
+		target := filepath.Join(dst, rel)
+		if d.IsDir() {
+			return os.MkdirAll(target, 0755)
+		}
+		info, err := d.Info()
+		if err != nil {
+			return err
+		}
+		if os.Link(p, target) != nil {
+			return copyFile(p, target, info.Mode())
+		}
+		return nil
+	})
 }
 
 func unarchive(ctx context.Context, source, destination string, keep func(relPath string) bool) error {
@@ -126,7 +214,11 @@ func unarchive(ctx context.Context, source, destination string, keep func(relPat
 		}
 	}
 
-	return u.Extract(ctx, r, nil, makeFileHandler(destination, keep))
+	var links []pendingLink
+	if err := u.Extract(ctx, r, nil, makeFileHandler(destination, keep, &links)); err != nil {
+		return err
+	}
+	return materializeLinks(links)
 }
 
 type mismatchedSha256 struct {
