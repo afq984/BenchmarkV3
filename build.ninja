@@ -16,3 +16,7 @@ build out/BenchmarkV3-macos-arm64: go
 build out/BenchmarkV3-windows-amd64.exe: go
   os = windows
   arch = amd64
+
+build out/BenchmarkV3-windows-arm64.exe: go
+  os = windows
+  arch = arm64
