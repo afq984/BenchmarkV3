@@ -24,6 +24,11 @@ func autoselectConfig() string {
 			log.Fatalf("Intel Macs are not supported by this benchmark version (no native x86_64 macOS LLVM build); run on Apple Silicon")
 		}
 	}
+	if runtime.GOOS == "windows" {
+		if runtime.GOARCH == "amd64" {
+			return "windows-amd64"
+		}
+	}
 	log.Fatalf("Unknown GOOS and GOARCH combination: %s, %s", runtime.GOOS, runtime.GOARCH)
 	panic("unreachable")
 }
