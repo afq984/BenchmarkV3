@@ -3,6 +3,7 @@ package systemdetect
 import (
 	"bytes"
 	"log"
+	"strings"
 	"testing"
 )
 
@@ -12,6 +13,12 @@ func TestCpu(t *testing.T) {
 		t.Fatal("cannot get CPU information")
 	}
 	log.Println("detected CPU:", cpu)
+	// Guard against degenerate detections such as `0C0T ""`, which is what the
+	// arm64 path used to produce because /proc/cpuinfo has no x86 topology
+	// fields. A real CPU has at least one core and a non-empty name.
+	if strings.HasPrefix(cpu, "0C") || strings.HasSuffix(cpu, `""`) {
+		t.Errorf("degenerate CPU detection: %q", cpu)
+	}
 }
 
 func TestRam(t *testing.T) {
