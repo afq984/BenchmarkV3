@@ -177,9 +177,47 @@ var WindowsAmd64Config = &Config{
 	DebianSysrootArchive: defaultDebianSysrootArchive,
 }
 
+var WindowsArm64Config = &Config{
+	ClangBin: "clang+llvm-22.1.8-aarch64-pc-windows-msvc/bin",
+	ClangPkg: &Archive{
+		URL:    "https://github.com/llvm/llvm-project/releases/download/llvmorg-22.1.8/clang+llvm-22.1.8-aarch64-pc-windows-msvc.tar.xz",
+		Sha256: "de718c58ebbc5f61d58c17b90457fcf42983bc2c4a4aba3e010d108713bfd7f1",
+		Keep:   toolchainKeep,
+	},
+
+	// cmake only ships Windows ARM64 binaries from 3.24.0 on. cmake is not part
+	// of the timed build, so the version needn't match the other configs' 3.22.1.
+	CmakeBin: "cmake-3.24.0-windows-arm64/bin",
+	CmakePkg: &Archive{
+		URL:    "https://github.com/Kitware/CMake/releases/download/v3.24.0/cmake-3.24.0-windows-arm64.zip",
+		Sha256: "552c3c922460a05b1ee14b560750d2deb7a16cf55ad780a0b81bce81fe38e93d",
+	},
+
+	NinjaBin: defaultNinjaBin,
+	NinjaPkg: &Archive{
+		URL:    "https://github.com/ninja-build/ninja/releases/download/v1.12.1/ninja-winarm64.zip",
+		Sha256: "79c96a50e0deafec212cfa85aa57c6b74003f52d9d1673ddcd1eab1c958c5900",
+	},
+
+	PythonPkg: &Archive{
+		URL:       "https://www.python.org/ftp/python/3.13.1/python-3.13.1-embed-arm64.zip",
+		Sha256:    "ae8561bf958f77c68cb6c44ced983e5267fe965a7e4168f41ec2291350b81d55",
+		ExtractTo: "python",
+	},
+	Python: "python/python.exe",
+
+	CmakeArgs: []string{"-DLLVM_HOST_TRIPLE=aarch64-pc-windows-msvc"},
+
+	LLVMSrc:        defaultLLVMSrc,
+	LLVMSrcArchive: defaultLLVMSrcArchive,
+
+	DebianSysrootArchive: defaultDebianSysrootArchive,
+}
+
 var configs = map[string]*Config{
 	"linux-amd64":   LinuxAmd64Config,
 	"linux-arm64":   LinuxArm64Config,
 	"macos-arm64":   MacOSArm64Config,
 	"windows-amd64": WindowsAmd64Config,
+	"windows-arm64": WindowsArm64Config,
 }

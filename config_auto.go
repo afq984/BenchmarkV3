@@ -25,8 +25,11 @@ func autoselectConfig() string {
 		}
 	}
 	if runtime.GOOS == "windows" {
-		if runtime.GOARCH == "amd64" {
+		switch runtime.GOARCH {
+		case "amd64":
 			return "windows-amd64"
+		case "arm64":
+			return "windows-arm64"
 		}
 	}
 	log.Fatalf("Unknown GOOS and GOARCH combination: %s, %s", runtime.GOOS, runtime.GOARCH)
