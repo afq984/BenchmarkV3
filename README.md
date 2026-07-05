@@ -21,6 +21,18 @@ Append `-s -- --quick` for a quick build:
 curl -fsSL https://afq984.github.io/BenchmarkV3/run.sh | sh -s -- --quick
 ```
 
+On Windows, in PowerShell:
+
+```
+irm https://afq984.github.io/BenchmarkV3/run.ps1 | iex
+```
+
+For a quick build, invoke it as a scriptblock so the flag passes through:
+
+```
+& ([scriptblock]::Create((irm https://afq984.github.io/BenchmarkV3/run.ps1))) --quick
+```
+
 Or download the binary yourself from the [release page](https://github.com/afq984/BenchmarkV3/releases/tag/latest):
 
 ```
