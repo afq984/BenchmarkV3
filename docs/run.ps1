@@ -9,13 +9,16 @@
 $ErrorActionPreference = "Stop"
 $ProgressPreference = "SilentlyContinue"  # Invoke-WebRequest is far faster without it
 
-# OSArchitecture reports the native architecture even from an emulated process.
-$arch = [System.Runtime.InteropServices.RuntimeInformation]::OSArchitecture
+# Windows sets PROCESSOR_ARCHITECTURE to the process architecture, and (only under
+# emulation) PROCESSOR_ARCHITEW6432 to the native one. Prefer the native value so an
+# emulated x64 shell on ARM64 still benchmarks the native binary. This is far more
+# reliable across PowerShell versions than [RuntimeInformation]::OSArchitecture.
+if ($env:PROCESSOR_ARCHITEW6432) { $arch = $env:PROCESSOR_ARCHITEW6432 } else { $arch = $env:PROCESSOR_ARCHITECTURE }
 switch ($arch) {
-    "X64"   { $variant = "windows-amd64" }
-    "Arm64" { $variant = "windows-arm64" }
+    "AMD64" { $variant = "windows-amd64" }
+    "ARM64" { $variant = "windows-arm64" }
     default {
-        Write-Error "BenchmarkV3: unsupported architecture: $arch (supported: x64, arm64)"
+        Write-Error "BenchmarkV3: unsupported architecture: '$arch' (supported: AMD64, ARM64)"
         return
     }
 }
