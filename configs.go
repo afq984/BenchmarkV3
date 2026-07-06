@@ -45,6 +45,10 @@ const (
 	// Since LLVM 20 the per-subproject source tarballs (llvm-X.src.tar.xz) are
 	// no longer published, so we use the full llvm-project source tarball.
 	defaultLLVMSrc = "llvm-project-22.1.8.src/llvm"
+	// Interpreter path inside an extracted python-build-standalone archive; its
+	// tarballs contain a top-level python/ directory. (Windows instead uses the
+	// PSF embeddable, whose python.exe sits at the archive root.)
+	standalonePython = "python/bin/python3"
 )
 
 var defaultLLVMSrcArchive = &Archive{
@@ -79,6 +83,13 @@ var LinuxAmd64Config = &Config{
 		Sha256: "6f98805688d19672bd699fbbfa2c2cf0fc054ac3df1f0e6a47664d963d530255",
 	},
 
+	// Bundled Python 3 for LLVM's cmake, so no system python3 is required.
+	PythonPkg: &Archive{
+		URL:    "https://github.com/astral-sh/python-build-standalone/releases/download/20260623/cpython-3.13.14+20260623-x86_64-unknown-linux-gnu-install_only_stripped.tar.gz",
+		Sha256: "459ed79967acc207bef2ff5124dac35d74d5108528e37b15395d14e2922f2c92",
+	},
+	Python: standalonePython,
+
 	LLVMSrc:        defaultLLVMSrc,
 	LLVMSrcArchive: defaultLLVMSrcArchive,
 
@@ -105,6 +116,13 @@ var LinuxArm64Config = &Config{
 		Sha256: "5c25c6570b0155e95fce5918cb95f1ad9870df5768653afe128db822301a05a1",
 	},
 
+	// Bundled Python 3 for LLVM's cmake, so no system python3 is required.
+	PythonPkg: &Archive{
+		URL:    "https://github.com/astral-sh/python-build-standalone/releases/download/20260623/cpython-3.13.14+20260623-aarch64-unknown-linux-gnu-install_only_stripped.tar.gz",
+		Sha256: "e931d7a393f54902503f8745ceb35420e7dd50a067e78e5f45c71404f7a15b30",
+	},
+	Python: standalonePython,
+
 	LLVMSrc:        defaultLLVMSrc,
 	LLVMSrcArchive: defaultLLVMSrcArchive,
 
@@ -130,6 +148,15 @@ var MacOSArm64Config = &Config{
 		URL:    "https://github.com/ninja-build/ninja/releases/download/v1.12.1/ninja-mac.zip",
 		Sha256: "89a287444b5b3e98f88a945afa50ce937b8ffd1dcc59c555ad9b1baf855298c9",
 	},
+
+	// Bundled Python 3 for LLVM's cmake, so no system python3 is required. macOS
+	// ships no usable python3 (only the Command Line Tools provide one), so this
+	// lets the benchmark run on a stock machine.
+	PythonPkg: &Archive{
+		URL:    "https://github.com/astral-sh/python-build-standalone/releases/download/20260623/cpython-3.13.14+20260623-aarch64-apple-darwin-install_only_stripped.tar.gz",
+		Sha256: "795a5aeeb050f00aa8a2214d779bad9f1b9113edb6923317a80c042a11a087d7",
+	},
+	Python: standalonePython,
 
 	LLVMSrc:        defaultLLVMSrc,
 	LLVMSrcArchive: defaultLLVMSrcArchive,
