@@ -24,9 +24,8 @@ type Config struct {
 	LLVMSrcArchive       *Archive
 	DebianSysrootArchive *Archive
 
-	// PythonPkg provides a Python 3 interpreter that LLVM's cmake requires;
-	// Linux/macOS use the system python3, so only the Windows config sets it.
-	// Python is the path to python.exe relative to buildDir.
+	// PythonPkg provides the Python 3 interpreter that LLVM's cmake requires;
+	// Python is its path relative to buildDir, passed as -DPython3_EXECUTABLE.
 	PythonPkg Package
 	Python    string
 
